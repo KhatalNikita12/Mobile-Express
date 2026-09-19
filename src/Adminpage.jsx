@@ -6,16 +6,20 @@ import ProductForm from './components/ProductForm';
 import ProductTable from './components/ProductTable';
 import ServiceForm from './components/ServiceForm';
 import ServiceTable from './components/ServiceTable';
+import CategoryBrandManager from './components/CategoryBrandManager';
 import Toast from './components/Toast';
 
-const EMPTY_PRODUCT = { id: null, category: 'mobile', name: '', brand: '', price: '', specs: '' };
+const EMPTY_PRODUCT = { id: null, category: '', name: '', brand: '', price: '', specs: '' };
 const EMPTY_SERVICE = { id: null, category: 'mobile', name: '', description: '', price: '' };
 
-export default function AdminPage() {
+export default function AdminPage({ theme = 'dark' }) {
   const [activeSubTab, setActiveSubTab] = useState('products');
 
   const [products, setProducts] = useState([]);
   const [services, setServices] = useState([]);
+  const [categories, setCategories] = useState([]); // <--- Categories state
+  const [brands, setBrands] = useState([]);         // <--- Brands state
+
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
 
@@ -30,16 +34,23 @@ export default function AdminPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [productData, serviceData] = await Promise.all([
+      // Fetch products, services, categories, and brands from their separate tables
+      const [productData, serviceData, categoryData, brandData] = await Promise.all([
         api.getProducts(),
-        api.getServices()
+        api.getServices(),
+        api.getCategories(),
+        api.getBrands()
       ]);
       setProducts(Array.isArray(productData) ? productData : []);
       setServices(Array.isArray(serviceData) ? serviceData : []);
+      setCategories(Array.isArray(categoryData) ? categoryData : []);
+      setBrands(Array.isArray(brandData) ? brandData : []);
     } catch (err) {
       console.error('Failed to load admin data', err);
       setProducts([]);
       setServices([]);
+      setCategories([]);
+      setBrands([]);
     } finally {
       setLoading(false);
     }
@@ -145,9 +156,17 @@ export default function AdminPage() {
     setIsEditingService(false);
   };
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
-      <AdminHeader activeSubTab={activeSubTab} setActiveSubTab={setActiveSubTab} />
+    <div className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-colors duration-300 ${
+      isDark ? 'text-slate-100' : 'text-slate-900'
+    }`}>
+      <AdminHeader 
+        activeSubTab={activeSubTab} 
+        setActiveSubTab={setActiveSubTab} 
+        theme={theme} 
+      />
 
       {activeSubTab === 'products' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -158,15 +177,19 @@ export default function AdminPage() {
             handleProductSubmit={handleProductSubmit}
             resetProductForm={resetProductForm}
             saving={saving}
+            categories={categories} // <--- Passed down here
+            brands={brands}             // <--- Passed down here
+            theme={theme}
           />
           <ProductTable
             products={products}
             loading={loading}
             editProduct={editProduct}
             deleteProduct={deleteProduct}
+            theme={theme}
           />
         </div>
-      ) : (
+      ) : activeSubTab === 'services' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <ServiceForm
             sForm={sForm}
@@ -175,14 +198,18 @@ export default function AdminPage() {
             handleServiceSubmit={handleServiceSubmit}
             resetServiceForm={resetServiceForm}
             saving={saving}
+            theme={theme}
           />
           <ServiceTable
             services={services}
             loading={loading}
             editService={editService}
             deleteService={deleteService}
+            theme={theme}
           />
         </div>
+      ) : (
+        <CategoryBrandManager theme={theme} showToast={showToast} />
       )}
 
       <AnimatePresence>

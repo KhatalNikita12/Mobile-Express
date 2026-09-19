@@ -1,9 +1,32 @@
 require('dotenv').config();
 const supabase = require('./supabaseClient');
 
+const initialCategories = [
+  { name: 'Smartphones' },
+  { name: 'Laptops' },
+  { name: 'Washing Machines' }
+];
+
+const initialBrands = [
+  // Smartphone Brands
+  { categoryName: 'Smartphones', name: 'Samsung' },
+  { categoryName: 'Smartphones', name: 'Apple' },
+  { categoryName: 'Smartphones', name: 'OnePlus' },
+  
+  // Laptop Brands
+  { categoryName: 'Laptops', name: 'Apple' },
+  { categoryName: 'Laptops', name: 'Dell' },
+  { categoryName: 'Laptops', name: 'HP' },
+  
+  // Washing Machine Brands
+  { categoryName: 'Washing Machines', name: 'Samsung' },
+  { categoryName: 'Washing Machines', name: 'LG' },
+  { categoryName: 'Washing Machines', name: 'Whirlpool' }
+];
+
 const initialProducts = [
   {
-    category: 'mobile',
+    category: 'smartphones',
     name: 'Galaxy S24 Ultra',
     brand: 'Samsung',
     price: 129999,
@@ -14,7 +37,7 @@ const initialProducts = [
     ]
   },
   {
-    category: 'mobile',
+    category: 'smartphones',
     name: 'iPhone 15 Pro',
     brand: 'Apple',
     price: 134900,
@@ -24,7 +47,7 @@ const initialProducts = [
     ]
   },
   {
-    category: 'laptop',
+    category: 'laptops',
     name: 'MacBook Pro 16',
     brand: 'Apple',
     price: 249900,
@@ -34,7 +57,7 @@ const initialProducts = [
     ]
   },
   {
-    category: 'washing machine',
+    category: 'washing machines',
     name: 'EcoBubble Front Load',
     brand: 'Samsung',
     price: 36990,
@@ -47,19 +70,19 @@ const initialProducts = [
 
 const initialServices = [
   {
-    category: 'mobile',
+    category: 'smartphones',
     name: 'Screen Replacement',
     description: 'High-quality OEM display replacement with warranty.',
     price: 'Starts at ₹1,999'
   },
   {
-    category: 'laptop',
+    category: 'laptops',
     name: 'Battery & Thermal Service',
     description: 'Battery health replacement and thorough cooling fan dust cleaning with fresh thermal paste.',
     price: 'Starts at ₹1,499'
   },
   {
-    category: 'washing machine',
+    category: 'washing machines',
     name: 'Drum Deep Cleaning',
     description: 'Complete internal sanitize flush and pressure pipe unblocking.',
     price: 'Starts at ₹799'
@@ -69,7 +92,38 @@ const initialServices = [
 async function seedDatabase() {
   console.log('🌱 Starting database seeding...');
 
-  // Seed Products
+  // 1. Seed Categories
+  const { data: insertedCategories, error: catError } = await supabase
+    .from('categories')
+    .insert(initialCategories)
+    .select();
+
+  if (catError) {
+    console.error('❌ Error seeding categories:', catError.message);
+    return;
+  }
+  console.log('✅ Categories seeded successfully!');
+
+  // Map category names to their generated Supabase UUIDs
+  const categoryMap = {};
+  insertedCategories.forEach(cat => {
+    categoryMap[cat.name] = cat.id;
+  });
+
+  // 2. Prepare and Seed Brands using Category UUIDs
+  const brandsWithForeignKeys = initialBrands.map(b => ({
+    name: b.name,
+    category_id: categoryMap[b.categoryName]
+  })).filter(b => b.category_id); // Ensure valid match
+
+  const { error: brandError } = await supabase.from('brands').insert(brandsWithForeignKeys);
+  if (brandError) {
+    console.error('❌ Error seeding brands:', brandError.message);
+  } else {
+    console.log('✅ Brands linked and seeded successfully!');
+  }
+
+  // 3. Seed Products
   const { error: productError } = await supabase.from('products').insert(initialProducts);
   if (productError) {
     console.error('❌ Error seeding products:', productError.message);
@@ -77,7 +131,7 @@ async function seedDatabase() {
     console.log('✅ Products seeded successfully with multi-image arrays!');
   }
 
-  // Seed Services
+  // 4. Seed Services
   const { error: serviceError } = await supabase.from('services').insert(initialServices);
   if (serviceError) {
     console.error('❌ Error seeding services:', serviceError.message);
