@@ -4,7 +4,7 @@ import { User, Phone, MapPin } from 'lucide-react';
 export default function ContactSection({ shopInfo }) {
   // Use passed shopInfo props if available, or fall back to Rahul Varma's details
   const info = shopInfo || {
-    owner: "Rahul varma",
+    owner: " varma",
     phone: "+91 9876543210",
     address: "Balaji chowk, Pashan Sus Road Opp mountvert arcade, Pune, Maharashtra 411021"
   };

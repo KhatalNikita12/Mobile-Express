@@ -1,10 +1,10 @@
 import React from 'react';
-import { MapPin, Phone, Mail, Heart, ArrowUp } from 'lucide-react';
+import { MapPin, Phone, Heart, ArrowUp } from 'lucide-react';
 
 export default function Footer({ shopInfo }) {
   // Use passed shopInfo props if available, or fall back to defaults
   const info = shopInfo || {
-    owner: "Rahul Varma",
+    owner: "Varma",
     phone: "+91 9876543210",
     address: "Balaji chowk, Pashan Sus Road Opp mountvert arcade, Pune, Maharashtra 411021",
     email: "support@repairshop.com" // fallback if email is part of shopInfo

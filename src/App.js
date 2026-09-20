@@ -7,7 +7,7 @@ import './App.css';
 
 const shopInfo = {
   name: 'Mobile Xpress( Varma Ent )',
-  owner: 'Rahul varma',
+  owner: 'varma',
   phone: '+91 9876543210',
   address: 'Balaji chowk,Pashan Sus Road Opp mountvert arcade, Pune, Maharashtra 411021',
   whatsappNumber: '919876543210'

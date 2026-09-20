@@ -30,7 +30,7 @@ export default function CategoriesSection({
   const isDark = theme === 'dark';
 
   return (
-    <section id="categories" className="max-w-7xl mx-auto px-1 space-y-8">
+    <section id="categories" className="max-w-7xl mx-auto pb-4 px-3 space-y-8">
       <div className={`relative flex flex-col items-center gap-4 border-b pb-6 ${
         isDark ? 'border-slate-800' : 'border-orange-100'
       }`}>

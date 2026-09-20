@@ -4,7 +4,6 @@ import { api } from '../api';
 export default function CategoryBrandManager({ theme = 'dark', showToast }) {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Form states
   const [catName, setCatName] = useState('');
@@ -15,7 +14,6 @@ export default function CategoryBrandManager({ theme = 'dark', showToast }) {
 
   const loadData = useCallback(async () => {
     try {
-      setLoading(true);
       const [catData, brandData] = await Promise.all([
         api.getCategories(),
         api.getBrands()
@@ -24,8 +22,6 @@ export default function CategoryBrandManager({ theme = 'dark', showToast }) {
       setBrands(Array.isArray(brandData) ? brandData : []);
     } catch (err) {
       showToast('error', 'Failed to load categories or brands');
-    } finally {
-      setLoading(false);
     }
   }, [showToast]);
 

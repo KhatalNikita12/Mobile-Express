@@ -3,8 +3,8 @@ import { Wrench, MessageCircle } from 'lucide-react';
 
 export default function ServicesSection({ loading, services, shopInfo }) {
   return (
-    <section id="services" className="bg-slate-100  px-4">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <section id="services" className="bg-slate-100 py-3 px-4">
+      <div className="max-w-7xl mx-auto my-auto space-y-10">
         <div className="text-center space-y-2">
           {/* <span className="text-indigo-600 font-semibold text-xs uppercase tracking-wider">Expert Care</span> */}
           <h2 className="text-3xl font-bold text-slate-900">Our Repair Services</h2>
