@@ -7,6 +7,7 @@ import ServicesSection from './components/ServicesSection';
 import ContactSection from './components/ContactSection';
 import BrandProductsModal from './components/BrandProductsModal';
 import ProductModal from './components/ProductModal';
+import Footer from './components/Footer';
 
 export default function UserPage({ shopInfo, theme = 'dark' }) {
   const [products, setProducts] = useState([]);
@@ -54,7 +55,7 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
     .map(b => b.name);
 
   return (
-    <div id="home" className={`space-y-16 pb-16 transition-colors duration-300 ${
+    <div id="home" className={` pb-16 transition-colors duration-300 ${
       theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
     }`}>
       <Hero theme={theme} />
@@ -85,7 +86,7 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
       />
 
       <ContactSection shopInfo={shopInfo} theme={theme} />
-
+<Footer shopInfo={shopInfo} theme={theme} />
       <AnimatePresence>
         {selectedBrandModal && (
           <BrandProductsModal

@@ -6,10 +6,10 @@ import AdminPage from '../src/Adminpage';
 import './App.css';
 
 const shopInfo = {
-  name: 'Mobile Xpress & Electronics',
-  owner: 'Rahul Sharma',
+  name: 'Mobile Xpress( Varma Ent )',
+  owner: 'Rahul varma',
   phone: '+91 9876543210',
-  address: 'Shop No. 4, Main Market, Near Tech Park, Pune - 411001',
+  address: 'Balaji chowk,Pashan Sus Road Opp mountvert arcade, Pune, Maharashtra 411021',
   whatsappNumber: '919876543210'
 };
 

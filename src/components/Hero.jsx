@@ -38,7 +38,7 @@ export default function Hero({ theme = 'dark' }) {
         )}
       </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <main className="relative z-10  mx-1 px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         
         {/* Left Column: Typography and Call to Action */}
         <motion.div 
@@ -56,8 +56,8 @@ export default function Hero({ theme = 'dark' }) {
             <span>Next-Gen Gadgets & Expert Repair</span>
           </div> */}
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1]">
-            Your Ultimate <br />
+          <h1 className="text-4xl  lg:text font-bold tracking-tight leading-[1.1]">
+            Your Ultimate &nbsp;
             <span className={isDark 
               ? "bg-gradient-to-r from-indigo-400 via-violet-300 to-pink-400 bg-clip-text text-transparent"
               : "bg-gradient-to-r from-orange-500 via-amber-500 to-rose-500 bg-clip-text text-transparent"
@@ -66,7 +66,7 @@ export default function Hero({ theme = 'dark' }) {
             </span>
           </h1>
 
-          <p className={`max-w-xl mx-auto lg:mx-0 text-base sm:text-lg leading-relaxed font-normal ${
+          <p className={`max-w-xl  lg:mx-0 text-base sm:text-lg leading-relaxed font-normal ${
             isDark ? 'text-slate-300' : 'text-slate-600'
           }`}>
             Explore top-tier Mobiles, Laptops, and Smart Home Appliances. Enjoy professional diagnostic and repair services backed by genuine parts guaranteed.
@@ -172,7 +172,7 @@ export default function Hero({ theme = 'dark' }) {
                   <p className="text-sm font-bold text-emerald-500">Save up to ₹5,000 Today</p>
                 </div>
                 <button 
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold shadow transition active:scale-95 ${
+                  className={` py-2 rounded-xl text-xs font-semibold shadow transition active:scale-95 ${
                     isDark ? 'bg-indigo-600 hover:bg-indigo-500 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
                   }`}
                 >
