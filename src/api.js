@@ -28,23 +28,35 @@ export const api = {
   },
 
   updateProduct: async (id, productData) => {
-    const isFormData = productData instanceof FormData;
-    const options = {
-      method: 'PUT',
-      body: isFormData ? productData : JSON.stringify(productData),
-    };
+  if (!id) {
+    throw new Error("updateProduct requires a valid product ID");
+  }
 
-    if (!isFormData) {
-      options.headers = { 'Content-Type': 'application/json' };
-    }
+  const isFormData = productData instanceof FormData;
+  const options = {
+    method: 'PUT',
+    body: isFormData ? productData : JSON.stringify(productData),
+  };
 
-    const res = await fetch(`${API_BASE_URL}/products/${id}`, options);
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Failed to update product');
-    }
-    return res.json();
-  },
+  if (!isFormData) {
+    options.headers = { 'Content-Type': 'application/json' };
+  }
+
+  // Encode URI component to prevent syntax errors in the URL
+  const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}`, options);
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || errData.message || `Failed to update product (HTTP ${res.status})`);
+  }
+
+  // Handle HTTP 204 (No Content) responses
+  if (res.status === 204) {
+    return { id, success: true };
+  }
+
+  return res.json();
+},
 
   deleteProduct: async (id) => {
     const res = await fetch(`${API_BASE_URL}/products/${id}`, {
@@ -99,6 +111,7 @@ getCategories: async () => {
   if (!res.ok) throw new Error('Failed to fetch categories');
   return res.json();
 },
+
 createCategory: async (data) => {
   const res = await fetch(`${API_BASE_URL}/categories`, {
     method: 'POST',
@@ -133,5 +146,19 @@ deleteBrand: async (id) => {
   const res = await fetch(`${API_BASE_URL}/brands/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete brand');
   return res.json();
-}
+},
+
+//offer
+createoffer: async (data) => {
+  const res = await fetch(`${API_BASE_URL}/offers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to apply offer');
+  return res.json();
+},
+
+
 };
+
