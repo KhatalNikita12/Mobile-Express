@@ -7,7 +7,10 @@ import ProductTable from './components/ProductTable';
 import ServiceForm from './components/ServiceForm';
 import ServiceTable from './components/ServiceTable';
 import CategoryBrandManager from './components/CategoryBrandManager';
+import OffersForm from './components/OffersForm';
+import OffersTable from './components/OffersTable';
 import Toast from './components/Toast';
+import AboutGalleryAdmin from './components/AboutGalleryAdmin';
 
 const EMPTY_PRODUCT = { id: null, category: '', name: '', brand: '', price: '', specs: '' };
 const EMPTY_SERVICE = { id: null, category: 'mobile', name: '', description: '', price: '' };
@@ -16,9 +19,11 @@ export default function AdminPage({ theme = 'dark' }) {
   const [activeSubTab, setActiveSubTab] = useState('products');
 
   const [products, setProducts] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [services, setServices] = useState([]);
-  const [categories, setCategories] = useState([]); // <--- Categories state
-  const [brands, setBrands] = useState([]);         // <--- Brands state
+  const [categories, setCategories] = useState([]); 
+  const [brands, setBrands] = useState([]);         
+  const [galleryItems, setGalleryItems] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
@@ -34,23 +39,25 @@ export default function AdminPage({ theme = 'dark' }) {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      // Fetch products, services, categories, and brands from their separate tables
-      const [productData, serviceData, categoryData, brandData] = await Promise.all([
+      const [productData, serviceData, categoryData, brandData, galleryData] = await Promise.all([
         api.getProducts(),
         api.getServices(),
         api.getCategories(),
-        api.getBrands()
+        api.getBrands(),
+        api.getAboutGallery(),
       ]);
       setProducts(Array.isArray(productData) ? productData : []);
       setServices(Array.isArray(serviceData) ? serviceData : []);
       setCategories(Array.isArray(categoryData) ? categoryData : []);
       setBrands(Array.isArray(brandData) ? brandData : []);
+      setGalleryItems(galleryData?.success ? galleryData.data : (Array.isArray(galleryData) ? galleryData : []));
     } catch (err) {
       console.error('Failed to load admin data', err);
       setProducts([]);
       setServices([]);
       setCategories([]);
       setBrands([]);
+      setGalleryItems([]);
     } finally {
       setLoading(false);
     }
@@ -83,6 +90,31 @@ export default function AdminPage({ theme = 'dark' }) {
         const created = await api.createProduct(payload);
         setProducts([created, ...products]);
         showToast('success', 'Product added');
+      }
+      resetProductForm();
+    } catch (err) {
+      showToast('error', err.message || 'Could not save product');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleOfferSubmit = async (e, customFormData = null) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    setSaving(true);
+    try {
+      const payload = customFormData || pForm;
+
+      if (isEditingProduct) {
+        const updated = await api.updateProduct(pForm.id, payload);
+        setOffers(products.map(p => (p.id === updated.id ? updated : p)));
+        showToast('success', 'Offers Apply');
+      } else {
+        const created = await api.create(payload);
+        setOffers([created, ...products]);
+        showToast('success', 'Offers Apply');
       }
       resetProductForm();
     } catch (err) {
@@ -177,8 +209,8 @@ export default function AdminPage({ theme = 'dark' }) {
             handleProductSubmit={handleProductSubmit}
             resetProductForm={resetProductForm}
             saving={saving}
-            categories={categories} // <--- Passed down here
-            brands={brands}             // <--- Passed down here
+            categories={categories}
+            brands={brands}
             theme={theme}
           />
           <ProductTable
@@ -208,9 +240,31 @@ export default function AdminPage({ theme = 'dark' }) {
             theme={theme}
           />
         </div>
+      ) : activeSubTab==='offers' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           <OffersForm 
+            pForm={pForm}
+            setPForm={setPForm}
+            isEditingProduct={isEditingProduct}
+            handleOfferSubmit={handleOfferSubmit}
+            resetProductForm={resetProductForm}
+            saving={saving}
+            categories={categories} // <--- Passed down here
+            brands={brands}  
+            product={products}         
+            theme={theme}></OffersForm>
+           <OffersTable></OffersTable>
+        </div>
+      ) : activeSubTab === 'about' ? (
+        <AboutGalleryAdmin
+          theme={theme}
+          galleryItems={galleryItems}
+          setGalleryItems={setGalleryItems}
+          showToast={showToast}
+        />
       ) : (
         <CategoryBrandManager theme={theme} showToast={showToast} />
-      )}
+      ) }
 
       <AnimatePresence>
         <Toast toast={toast} />

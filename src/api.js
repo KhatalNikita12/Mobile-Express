@@ -28,23 +28,35 @@ export const api = {
   },
 
   updateProduct: async (id, productData) => {
-    const isFormData = productData instanceof FormData;
-    const options = {
-      method: 'PUT',
-      body: isFormData ? productData : JSON.stringify(productData),
-    };
+  if (!id) {
+    throw new Error("updateProduct requires a valid product ID");
+  }
 
-    if (!isFormData) {
-      options.headers = { 'Content-Type': 'application/json' };
-    }
+  const isFormData = productData instanceof FormData;
+  const options = {
+    method: 'PUT',
+    body: isFormData ? productData : JSON.stringify(productData),
+  };
 
-    const res = await fetch(`${API_BASE_URL}/products/${id}`, options);
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Failed to update product');
-    }
-    return res.json();
-  },
+  if (!isFormData) {
+    options.headers = { 'Content-Type': 'application/json' };
+  }
+
+  // Encode URI component to prevent syntax errors in the URL
+  const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}`, options);
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || errData.message || `Failed to update product (HTTP ${res.status})`);
+  }
+
+  // Handle HTTP 204 (No Content) responses
+  if (res.status === 204) {
+    return { id, success: true };
+  }
+
+  return res.json();
+},
 
   deleteProduct: async (id) => {
     const res = await fetch(`${API_BASE_URL}/products/${id}`, {
@@ -89,49 +101,116 @@ export const api = {
     return res.json();
   },
 
+  // ---- Categories ----
+  getCategories: async () => {
+    const res = await fetch(`${API_BASE_URL}/categories`);
+    if (!res.ok) throw new Error('Failed to fetch categories');
+    return res.json();
+  },
+  
+  createCategory: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/categories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to create category');
+    return res.json();
+  },
+  
+  deleteCategory: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete category');
+    return res.json();
+  },
 
-// Add these inside your api object in frontend api.js
-// Add inside your api object in api.js:
+  // ---- Brands ----
+  getBrands: async () => {
+    const res = await fetch(`${API_BASE_URL}/brands`);
+    if (!res.ok) throw new Error('Failed to fetch brands');
+    return res.json();
+  },
+  
+  createBrand: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/brands`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to create brand');
+    return res.json();
+  },
+  
+  deleteBrand: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/brands/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete brand');
+    return res.json();
+  },
 
-// Categories
-getCategories: async () => {
-  const res = await fetch(`${API_BASE_URL}/categories`);
-  if (!res.ok) throw new Error('Failed to fetch categories');
-  return res.json();
-},
-createCategory: async (data) => {
-  const res = await fetch(`${API_BASE_URL}/categories`, {
+  // ---- About Us / Gallery ----
+  getAboutGallery: async () => {
+    const res = await fetch(`${API_BASE_URL}/about-gallery`);
+    if (!res.ok) throw new Error('Failed to fetch gallery items');
+    return res.json();
+  },
+
+  createAboutGallery: async (galleryData) => {
+    const isFormData = galleryData instanceof FormData;
+    const options = {
+      method: 'POST',
+      body: isFormData ? galleryData : JSON.stringify(galleryData),
+    };
+
+    if (!isFormData) {
+      options.headers = { 'Content-Type': 'application/json' };
+    }
+
+    const res = await fetch(`${API_BASE_URL}/about-gallery`, options);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || 'Failed to create gallery item');
+    }
+    return res.json();
+  },
+
+  updateAboutGallery: async (id, galleryData) => {
+    const isFormData = galleryData instanceof FormData;
+    const options = {
+      method: 'PUT',
+      body: isFormData ? galleryData : JSON.stringify(galleryData),
+    };
+
+    if (!isFormData) {
+      options.headers = { 'Content-Type': 'application/json' };
+    }
+
+    const res = await fetch(`${API_BASE_URL}/about-gallery/${id}`, options);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || 'Failed to update gallery item');
+    }
+    return res.json();
+  },
+
+  deleteAboutGallery: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/about-gallery/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete gallery item');
+    return res.json();
+  },
+
+//offer
+createoffer: async (data) => {
+  const res = await fetch(`${API_BASE_URL}/offers`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error('Failed to create category');
-  return res.json();
-},
-deleteCategory: async (id) => {
-  const res = await fetch(`${API_BASE_URL}/categories/${id}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Failed to delete category');
+  if (!res.ok) throw new Error('Failed to apply offer');
   return res.json();
 },
 
-// Brands
-getBrands: async () => {
-  const res = await fetch(`${API_BASE_URL}/brands`);
-  if (!res.ok) throw new Error('Failed to fetch brands');
-  return res.json();
-},
-createBrand: async (data) => {
-  const res = await fetch(`${API_BASE_URL}/brands`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error('Failed to create brand');
-  return res.json();
-},
-deleteBrand: async (id) => {
-  const res = await fetch(`${API_BASE_URL}/brands/${id}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Failed to delete brand');
-  return res.json();
-}
+
 };
+

@@ -61,6 +61,14 @@ export default function Header({ activeTab = 'user', setActiveTab = () => {} }) 
             >
               Services
             </a>
+                  <a
+              href="#about"
+              className={`transition ${
+                theme === 'dark' ? 'hover:text-indigo-400' : 'hover:text-orange-500'
+              }`}
+            >
+              About Us
+            </a>
             <a
               href="#contact"
               className={`transition ${

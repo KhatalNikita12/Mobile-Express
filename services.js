@@ -31,24 +31,37 @@ router.post('/', async (req, res) => {
 });
 
 // Update a service
+router.use((req, res, next) => {
+  console.log(`📦 [PRODUCT ROUTER HIT]: ${req.method} path: ${req.path}`);
+  next();
+});
 router.put('/:id', async (req, res) => {
+  console.log('🔥 [PUT ROUTE HIT] Updating Product ID:', req.params.id);
+  console.log('Payload:', req.body);
+
   try {
     const { id } = req.params;
-    const { category, name, description, price } = req.body;
+
+    // Destructure properties from req.body to ensure clean database update
     const { data, error } = await supabase
-      .from('services')
-      .update({ category, name, description, price })
+      .from('products')
+      .update(req.body)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
+
+    if (!data) {
+      return res.status(404).json({ error: 'Product ID not found in Supabase database' });
+    }
+
     res.json(data);
   } catch (err) {
+    console.error('Error updating product:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
-
 // Delete a service
 router.delete('/:id', async (req, res) => {
   try {

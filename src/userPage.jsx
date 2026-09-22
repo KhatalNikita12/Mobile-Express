@@ -8,12 +8,14 @@ import ContactSection from './components/ContactSection';
 import BrandProductsModal from './components/BrandProductsModal';
 import ProductModal from './components/ProductModal';
 import Footer from './components/Footer';
+import AboutUs from './components/AboutUs';
 
 export default function UserPage({ shopInfo, theme = 'dark' }) {
   const [products, setProducts] = useState([]);
   const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]); // <--- Dynamic categories state
   const [brands, setBrands] = useState([]);         // <--- Dynamic brands state
+  const [galleryItems, setGalleryItems] = useState([]); // <--- About Us gallery images
   
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -27,18 +29,21 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
       try {
         setLoading(true);
         // Fetch products, services, categories, and brands in parallel
-        const [productData, serviceData, categoryData, brandData] = await Promise.all([
+        const [productData, serviceData, categoryData, brandData, galleryData] = await Promise.all([
           api.getProducts(),
           api.getServices(),
           api.getCategories(),
-          api.getBrands()
+          api.getBrands(),
+          api.getAboutGallery()
         ]);
         setProducts(Array.isArray(productData) ? productData : []);
         setServices(Array.isArray(serviceData) ? serviceData : []);
         setCategories(Array.isArray(categoryData) ? categoryData : []);
         setBrands(Array.isArray(brandData) ? brandData : []);
+        setGalleryItems(galleryData?.success ? galleryData.data : (Array.isArray(galleryData) ? galleryData : []));
       } catch (err) {
         setLoadError('Could not load the catalog. Is the API server running?');
+        setGalleryItems([]);
       } finally {
         setLoading(false);
       }
@@ -86,7 +91,9 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
       />
 
       <ContactSection shopInfo={shopInfo} theme={theme} />
-<Footer shopInfo={shopInfo} theme={theme} />
+      <AboutUs galleryItems={galleryItems} theme={theme} />
+
+      <Footer shopInfo={shopInfo} theme={theme} />
       <AnimatePresence>
         {selectedBrandModal && (
           <BrandProductsModal
@@ -100,6 +107,10 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
           />
         )}
       </AnimatePresence>
+
+
+
+
 
       <AnimatePresence>
         {selectedProduct && (

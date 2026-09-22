@@ -43,16 +43,16 @@ export default function CategoriesSection({
           <span className={`text-xs font-bold uppercase tracking-[0.2em] ${
             isDark ? 'text-indigo-400' : 'text-orange-600'
           }`}>
-            Browse the store
+           
           </span>
-          <h2 className={`text-3xl md:text-4xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <h5 className={`text-3xl md:text-4xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Shop By Category
-          </h2>
+          </h5>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: 56 }}
             transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-            className={`h-1 rounded-full mx-auto ${isDark ? 'bg-indigo-500' : 'bg-orange-500'}`}
+            className={`h-1 rounded-full mx-auto ${isDark ? 'bg-indigo-500' : 'bg-orange-600'}`}
           />
         </motion.div>
 
