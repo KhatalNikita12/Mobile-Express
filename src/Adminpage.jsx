@@ -101,15 +101,14 @@ export default function AdminPage({ theme = 'dark' }) {
     }
     setSaving(true);
     try {
-      const payload = customFormData || pForm;
-
+       const payload = customFormData || pForm;
       if (isEditingProduct) {
         const updated = await api.updateProduct(pForm.id, payload);
         setOffers(products.map(p => (p.id === updated.id ? updated : p)));
         showToast('success', 'Offers Apply');
       } else {
-        const created = await api.create(payload);
-        setOffers([created, ...products]);
+        const created = await api.createoffer(payload);
+        setOffers([created, ...offers]);
         showToast('success', 'Offers Apply');
       }
       resetProductForm();

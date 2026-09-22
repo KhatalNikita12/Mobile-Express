@@ -153,12 +153,16 @@ createoffer: async (data) => {
   const res = await fetch(`${API_BASE_URL}/offers`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data) // Expects a plain JS Object, NOT a FormData instance
   });
-  if (!res.ok) throw new Error('Failed to apply offer');
+  
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to apply offer');
+  }
+  
   return res.json();
-},
-
+}
 
 };
 
