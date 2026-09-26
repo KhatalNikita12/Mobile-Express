@@ -1,11 +1,11 @@
 import React from 'react';
 
 export default function OffersForm({ 
-  pForm, 
-  setPForm, 
-  isEditingProduct, 
+  oForm = {}, 
+  setOForm, 
+  isEditingOffers, 
   handleOfferSubmit, 
-  resetProductForm, 
+  resetOffersForm, 
   saving, 
   categories = [], 
   brands = [],
@@ -18,46 +18,12 @@ export default function OffersForm({
     ? product 
     : (product?.products || product?.data || []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Sync state values safely
+  const selectedCatId = String(oForm?.category_id || oForm?.category || '');
+  const selectedBrandId = String(oForm?.brand_id || oForm?.brand || '');
+  const selectedProdId = String(oForm?.product_id || oForm?.product || '');
 
-    const formElement = e.target;
-    
-    // Extract raw string values from state or direct form DOM elements
-    const rawCat = pForm.category_id || pForm.category || formElement.querySelector('[name="category_id"]')?.value;
-    const rawProd = pForm.product_id || pForm.product || formElement.querySelector('[name="product_id"]')?.value;
-    const rawBrand = pForm.brand_id || pForm.brand || formElement.querySelector('[name="brand_id"]')?.value;
-
-    // Helper to keep clean UUID strings without forcing Number() conversion
-    const cleanUuid = (val) => {
-      if (!val || val === 'undefined' || val === 'null' || val === '') return null;
-      return String(val).trim();
-    };
-
-    const payload = {
-      category_id: cleanUuid(rawCat),
-      brand_id: cleanUuid(rawBrand),
-      product_id: cleanUuid(rawProd),
-      original_price: pForm.original_price !== '' && pForm.original_price !== null ? Number(pForm.original_price) : null,
-      discount_percentage: pForm.discount_percentage !== '' ? Number(pForm.discount_percentage) : 0,
-      offer_price: pForm.offer_price !== '' && pForm.offer_price !== null ? Number(pForm.offer_price) : null,
-      valid_until: pForm.valid_until || null,
-      is_active: true
-    };
-
-    console.log("✅ FIXED UUID PAYLOAD SENT TO SUPABASE:", payload);
-
-    handleOfferSubmit(e, payload); 
-  };
-
-  // Keep dropdown string state variables synced
-  const selectedCatId = String(pForm.category_id || pForm.category || '');
-  const selectedBrandId = String(pForm.brand_id || pForm.brand || '');
-  const selectedProdId = String(pForm.product_id || pForm.product || '');
-
-  const selectedCategoryObj = categories.find(
-    (c) => String(c.id) === selectedCatId
-  );
+  const selectedCategoryObj = categories.find((c) => String(c.id) === selectedCatId);
 
   const filteredBrands = brands.filter((b) => 
     selectedCategoryObj 
@@ -65,9 +31,7 @@ export default function OffersForm({
       : true
   );
 
-  const selectedBrandObj = brands.find(
-    (b) => String(b.id) === selectedBrandId
-  );
+  const selectedBrandObj = brands.find((b) => String(b.id) === selectedBrandId);
 
   const filteredProducts = productList.filter((p) => {
     if (!selectedBrandId) return true;
@@ -87,6 +51,40 @@ export default function OffersForm({
     return false;
   });
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const formElement = e.target;
+    
+    // Read directly from form elements or fallback to state
+    const rawCat = formElement.querySelector('[name="category_id"]')?.value || oForm.category_id || oForm.category;
+    const rawBrand = formElement.querySelector('[name="brand_id"]')?.value || oForm.brand_id || oForm.brand;
+    const rawProd = formElement.querySelector('[name="product_id"]')?.value || oForm.product_id || oForm.product;
+
+    // Helper to extract clean UUID strings
+    const cleanUuid = (val) => {
+      if (!val || val === 'undefined' || val === 'null' || String(val).trim() === '') return null;
+      return String(val).trim();
+    };
+
+    const payload = {
+      category_id: cleanUuid(rawCat),
+      brand_id: cleanUuid(rawBrand),
+      product_id: cleanUuid(rawProd),
+      original_price: oForm.original_price !== '' && oForm.original_price !== null ? Number(oForm.original_price) : null,
+      discount_percentage: oForm.discount_percentage !== '' ? Number(oForm.discount_percentage) : 0,
+      offer_price: oForm.offer_price !== '' && oForm.offer_price !== null ? Number(oForm.offer_price) : null,
+      valid_until: oForm.valid_until || null,
+      is_active: true
+    };
+
+    console.log("✅ PAYLOAD SENT TO SUPABASE:", payload);
+
+    if (handleOfferSubmit) {
+      handleOfferSubmit(e, payload); 
+    }
+  };
+
   return (
     <div className={`p-6 rounded-2xl border shadow-sm space-y-4 h-fit transition-colors duration-300 ${
       isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-orange-200 text-slate-900'
@@ -101,8 +99,8 @@ export default function OffersForm({
           <select
             name="category_id"
             value={selectedCatId}
-            onChange={(e) => setPForm({ 
-              ...pForm, 
+            onChange={(e) => setOForm && setOForm({ 
+              ...oForm, 
               category_id: e.target.value,
               category: e.target.value,
               brand_id: '', 
@@ -135,15 +133,18 @@ export default function OffersForm({
             name="brand_id"
             value={selectedBrandId}
             onChange={(e) => {
-              setPForm({ 
-                ...pForm, 
-                brand_id: e.target.value,
-                brand: e.target.value, 
-                product_id: '',
-                product: '',
-                original_price: '',
-                offer_price: ''
-              });
+              const bId = e.target.value;
+              if (setOForm) {
+                setOForm({ 
+                  ...oForm, 
+                  brand_id: bId,
+                  brand: bId, 
+                  product_id: '',
+                  product: '',
+                  original_price: '',
+                  offer_price: ''
+                });
+              }
             }}
             required
             disabled={!selectedCatId}
@@ -172,23 +173,29 @@ export default function OffersForm({
               const selectedProductId = e.target.value;
               const selectedProductObj = productList.find(p => String(p.id) === String(selectedProductId));
               
+              const productBrandId = selectedProductObj?.brand_id || selectedProductObj?.brandId || oForm.brand_id;
+
               const rawPrice = selectedProductObj 
                 ? (selectedProductObj.original_price ?? selectedProductObj.price) 
                 : '';
               const originalPrice = rawPrice !== '' && rawPrice !== null ? Number(rawPrice) : '';
 
-              const discountPercent = parseFloat(pForm.discount_percentage) || 0;
+              const discountPercent = parseFloat(oForm.discount_percentage) || 0;
               const calculatedOfferPrice = originalPrice !== '' 
                 ? Math.round(originalPrice - (originalPrice * discountPercent) / 100) 
                 : '';
 
-              setPForm({ 
-                ...pForm, 
-                product_id: selectedProductId,
-                product: selectedProductId,
-                original_price: originalPrice,
-                offer_price: calculatedOfferPrice
-              });
+              if (setOForm) {
+                setOForm({ 
+                  ...oForm, 
+                  brand_id: productBrandId || oForm.brand_id,
+                  brand: productBrandId || oForm.brand,
+                  product_id: selectedProductId,
+                  product: selectedProductId,
+                  original_price: originalPrice,
+                  offer_price: calculatedOfferPrice
+                });
+              }
             }}
             disabled={!selectedBrandId}
             required
@@ -215,7 +222,7 @@ export default function OffersForm({
               type="number" 
               name="original_price"
               readOnly
-              value={pForm.original_price ?? ''} 
+              value={oForm.original_price ?? ''} 
               placeholder="Select a product" 
               className={`w-full border rounded-xl p-2.5 opacity-80 cursor-not-allowed ${
                 isDark ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
@@ -232,21 +239,23 @@ export default function OffersForm({
               name="discount_percentage"
               min="0"
               max="100"
-              value={pForm.discount_percentage ?? ''} 
+              value={oForm.discount_percentage ?? ''} 
               onChange={(e) => {
                 const discountVal = e.target.value;
-                const originalPrice = parseFloat(pForm.original_price) || 0;
+                const originalPrice = parseFloat(oForm.original_price) || 0;
                 const discountPercent = parseFloat(discountVal) || 0;
                 
                 const calculatedOfferPrice = originalPrice 
                   ? Math.round(originalPrice - (originalPrice * discountPercent) / 100) 
                   : '';
 
-                setPForm({ 
-                  ...pForm, 
-                  discount_percentage: discountVal,
-                  offer_price: calculatedOfferPrice
-                });
+                if (setOForm) {
+                  setOForm({ 
+                    ...oForm, 
+                    discount_percentage: discountVal,
+                    offer_price: calculatedOfferPrice
+                  });
+                }
               }} 
               placeholder="e.g. 10" 
               className={`w-full border rounded-xl p-2.5 ${
@@ -263,7 +272,7 @@ export default function OffersForm({
               type="number" 
               name="offer_price"
               readOnly
-              value={pForm.offer_price ?? ''} 
+              value={oForm.offer_price ?? ''} 
               placeholder="Calculated price" 
               className={`w-full border rounded-xl p-2.5 font-semibold ${
                 isDark 
@@ -284,8 +293,8 @@ export default function OffersForm({
             name="valid_until"
             required
             min={new Date().toISOString().split('T')[0]} 
-            value={pForm.valid_until || ''} 
-            onChange={(e) => setPForm({ ...pForm, valid_until: e.target.value })} 
+            value={oForm.valid_until || ''} 
+            onChange={(e) => setOForm && setOForm({ ...oForm, valid_until: e.target.value })} 
             className={`w-full border rounded-xl p-2.5 ${
               isDark ? 'bg-slate-950 border-slate-800 text-white scheme-dark' : 'bg-orange-50/50 border-orange-200 text-slate-900'
             }`} 
@@ -301,12 +310,12 @@ export default function OffersForm({
               isDark ? 'bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50' : 'bg-orange-500 hover:bg-orange-600 disabled:opacity-50'
             }`}
           >
-            {saving ? 'Saving...' : isEditingProduct ? 'Update Offer' : 'Apply Offer'}
+            {saving ? 'Saving...' : isEditingOffers ? 'Update Offer' : 'Apply Offer'}
           </button>
-          {isEditingProduct && (
+          {isEditingOffers && (
             <button 
               type="button" 
-              onClick={resetProductForm} 
+              onClick={resetOffersForm} 
               className={`px-4 py-2.5 rounded-xl border ${
                 isDark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700' : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
               }`}

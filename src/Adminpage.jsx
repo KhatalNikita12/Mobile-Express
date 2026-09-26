@@ -13,7 +13,7 @@ import Toast from './components/Toast';
 
 const EMPTY_PRODUCT = { id: null, category: '', name: '', brand: '', price: '', specs: '' };
 const EMPTY_SERVICE = { id: null, category: 'mobile', name: '', description: '', price: '' };
-
+const EMPTY_OFFERS = { id: null, category: 'mobile', name: '', brand: '', price: '' };
 export default function AdminPage({ theme = 'dark' }) {
   const [activeSubTab, setActiveSubTab] = useState('products');
 
@@ -32,28 +32,34 @@ export default function AdminPage({ theme = 'dark' }) {
   const [sForm, setSForm] = useState(EMPTY_SERVICE);
   const [isEditingService, setIsEditingService] = useState(false);
 
+  const [oForm, setOForm] = useState(EMPTY_OFFERS);
+  const [isEditingOffers, setIsEditingOffers] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       // Fetch products, services, categories, and brands from their separate tables
-      const [productData, serviceData, categoryData, brandData] = await Promise.all([
+      const [productData, serviceData, categoryData, brandData,offersData] = await Promise.all([
         api.getProducts(),
         api.getServices(),
         api.getCategories(),
         api.getBrands(),
+        api.getOffers(),
       ]);
       setProducts(Array.isArray(productData) ? productData : []);
       setServices(Array.isArray(serviceData) ? serviceData : []);
       setCategories(Array.isArray(categoryData) ? categoryData : []);
       setBrands(Array.isArray(brandData) ? brandData : []);
+      setOffers(Array.isArray(offersData) ? offersData : []);
     } catch (err) {
       console.error('Failed to load admin data', err);
       setProducts([]);
       setServices([]);
       setCategories([]);
       setBrands([]);
+      setOffers([]);
     } finally {
       setLoading(false);
     }
@@ -101,10 +107,10 @@ export default function AdminPage({ theme = 'dark' }) {
     }
     setSaving(true);
     try {
-       const payload = customFormData || pForm;
-      if (isEditingProduct) {
-        const updated = await api.updateProduct(pForm.id, payload);
-        setOffers(products.map(p => (p.id === updated.id ? updated : p)));
+       const payload = customFormData || oForm;
+      if (isEditingOffers) {
+        const updated = await api.updateOffers(oForm.id, payload);
+        setOffers(offers.map(p => (p.id === updated.id ? updated : p)));
         showToast('success', 'Offers Apply');
       } else {
         const created = await api.createoffer(payload);
@@ -113,7 +119,7 @@ export default function AdminPage({ theme = 'dark' }) {
       }
       resetProductForm();
     } catch (err) {
-      showToast('error', err.message || 'Could not save product');
+      showToast('error', err.message || 'Could not save offers');
     } finally {
       setSaving(false);
     }
@@ -122,6 +128,11 @@ export default function AdminPage({ theme = 'dark' }) {
   const editProduct = (product) => {
     setPForm(product);
     setIsEditingProduct(true);
+  };
+
+   const editOffers = (offers) => {
+    setOForm(offers);
+    setIsEditingOffers(true);
   };
 
   const deleteProduct = async (id) => {
@@ -135,11 +146,25 @@ export default function AdminPage({ theme = 'dark' }) {
     }
   };
 
+   const deleteOffers = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this offers?')) return;
+    try {
+      await api.deleteOffers(id);
+      setOffers(offers.filter(p => p.id !== id));
+      showToast('success', 'Offers deleted');
+    } catch (err) {
+      showToast('error', err.message || 'Could not delete Offers');
+    }
+  };
+
   const resetProductForm = () => {
     setPForm(EMPTY_PRODUCT);
     setIsEditingProduct(false);
   };
-
+ const resetOffersForm = () => {
+    setOForm(EMPTY_OFFERS);
+    setIsEditingOffers(false);
+  };
   // ---- Services Submission Handler ----
   const handleServiceSubmit = async (e) => {
     e.preventDefault();
@@ -237,18 +262,28 @@ export default function AdminPage({ theme = 'dark' }) {
         </div>
       ) : activeSubTab==='offers' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           <OffersForm 
-            pForm={pForm}
-            setPForm={setPForm}
-            isEditingProduct={isEditingProduct}
-            handleOfferSubmit={handleOfferSubmit}
-            resetProductForm={resetProductForm}
-            saving={saving}
-            categories={categories} // <--- Passed down here
-            brands={brands}  
-            product={products}         
-            theme={theme}></OffersForm>
-           <OffersTable></OffersTable>
+         <OffersForm 
+          oForm={oForm} // Fixed prop name (was oFormForm)
+          setOForm={setOForm}
+          isEditingOffers={isEditingOffers}
+          handleOfferSubmit={handleOfferSubmit}
+          resetOffersForm={resetOffersForm}
+          saving={saving}
+          categories={categories}
+          brands={brands} 
+          product={products}         
+          theme={theme}
+        />
+           <OffersTable 
+            offers={offers}
+            loading={loading}
+            editOffers={editOffers}
+            deleteOffers={deleteOffers}
+            categories={categories}
+            brands={brands}
+            products={products}
+            theme={theme}
+          />
         </div>
       ):(
         <CategoryBrandManager theme={theme} showToast={showToast} />

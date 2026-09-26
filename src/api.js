@@ -160,9 +160,45 @@ createoffer: async (data) => {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || 'Failed to apply offer');
   }
-  
   return res.json();
-}
+},
+
+ getOffers: async () => {
+    const res = await fetch(`${API_BASE_URL}/offers`);
+    if (!res.ok) throw new Error('Failed to fetch Offers');
+    return res.json();
+  },
+
+updateOffers: async (id, offersData) => {
+  if (!id) {
+    throw new Error("updateOffers requires a valid Offers ID");
+  }
+  const isFormData = offersData instanceof FormData;
+  const options = {
+    method: 'PUT',
+    body: isFormData ? offersData : JSON.stringify(offersData),
+  };
+  if (!isFormData) {
+    options.headers = { 'Content-Type': 'application/json' };
+  }
+  const res = await fetch(`${API_BASE_URL}/offers/${encodeURIComponent(id)}`, options);
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.error || errData.message || `Failed to update offers (HTTP ${res.status})`);
+  }
+  if (res.status === 204) {
+    return { id, success: true };
+  }
+  return res.json();
+},
+deleteOffers: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/offers/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete offers');
+    return res.json();
+  },
 
 };
+
 

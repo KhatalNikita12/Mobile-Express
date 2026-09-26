@@ -37,20 +37,25 @@ router.post('/', async (req, res) => {
       is_active = true
     } = req.body;
 
+    const cleanUuid = (val) => {
+      if (!val || val === 'undefined' || val === 'null' || String(val).trim() === '') return null;
+      return String(val).trim();
+    };
+
+    const payload = {
+      category_id: cleanUuid(category_id),
+      product_id: cleanUuid(product_id),
+      brand_id: cleanUuid(brand_id),
+      original_price: original_price !== null && original_price !== '' ? Number(original_price) : null,
+      discount_percentage: discount_percentage !== '' ? Number(discount_percentage) : 0,
+      offer_price: offer_price !== null && offer_price !== '' ? Number(offer_price) : null,
+      valid_until: valid_until || null,
+      is_active
+    };
+
     const { data, error } = await supabase
       .from('offers')
-      .insert([
-        {
-          category_id, // Pass directly as UUID string
-          product_id,  // Pass directly as UUID string
-          brand_id,
-          original_price: original_price ? Number(original_price) : null,
-          discount_percentage: discount_percentage ? Number(discount_percentage) : 0,
-          offer_price: offer_price ? Number(offer_price) : null,
-          valid_until,
-          is_active
-        }
-      ])
+      .insert([payload])
       .select()
       .single();
 
