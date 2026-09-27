@@ -57,7 +57,38 @@ router.post('/', upload.array('imageFiles', 5), async (req, res) => {
   }
 });
 
+// Get one product along with its currently active offer, if any
+router.get('/:id/with-offer', async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (productError) throw productError;
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: offer, error: offerError } = await supabase
+      .from('offers')
+      .select('*')
+      .eq('product_id', id)
+      .gte('valid_until', today) // only offers still valid today or later
+      .order('valid_until', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (offerError) throw offerError;
+
+    res.json({ ...product, activeOffer: offer || null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // Update the product data
 // Update product (with optional new image files)
 router.put('/:id', upload.array('imageFiles', 5), async (req, res) => {

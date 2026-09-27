@@ -50,6 +50,7 @@ export default function AdminHeader({ activeSubTab, setActiveSubTab, theme = 'da
         Apply Offers
       </button>
 
+
       <button
         onClick={() => setActiveSubTab('about')}
         className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition shadow-sm ${
@@ -60,6 +61,7 @@ export default function AdminHeader({ activeSubTab, setActiveSubTab, theme = 'da
       >
         About Us Gallery
       </button>
+
     </div>
   );
 }

@@ -23,13 +23,28 @@ const getProductImageUrl = (product) => {
   return product.image || 'https://via.placeholder.com/300';
 };
 
-export default function BrandProductsModal({ brandName, category, products, shopInfo, onClose, onSelectProduct, theme = 'dark' }) {
+export default function BrandProductsModal({ brandName, category, products, offers = [], shopInfo, onClose, onSelectProduct, theme = 'dark' }) {
   const isDark = theme === 'dark';
 
   const brandItems = products.filter(p => 
     p.brand?.toLowerCase() === brandName?.toLowerCase() && 
     p.category?.toLowerCase() === category?.toLowerCase()
   );
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // An offer only counts if it's flagged active AND its end date hasn't
+  // passed yet. Once valid_until < today, this returns null and the caller
+  // automatically falls back to the product's own original price.
+  const getActiveOffer = (productId) =>
+    offers.find(
+      (o) =>
+        o &&
+        String(o.product_id) === String(productId) &&
+        o.is_active !== false &&
+        o.valid_until &&
+        o.valid_until >= todayStr
+    ) || null;
 
   return (
     <motion.div
@@ -77,24 +92,49 @@ export default function BrandProductsModal({ brandName, category, products, shop
             ) : (
               brandItems.map(product => {
                 const productImg = getProductImageUrl(product);
+                const activeOffer = getActiveOffer(product.id);
+                const hasOffer = !!activeOffer;
+                const originalPrice = Number(product.price) || 0;
+                // Offer price only wins while the offer is active and unexpired;
+                // otherwise this is simply the product's own original price.
+                const displayPrice = hasOffer ? Number(activeOffer.offer_price) : originalPrice;
+                const enquiryText = hasOffer
+                  ? `Hi, I want to enquire about ${product.brand} ${product.name} — Offer Price: ₹${displayPrice} (was ₹${originalPrice})`
+                  : `Hi, I want to enquire about ${product.brand} ${product.name} priced at ₹${originalPrice}`;
 
                 return (
                   <div 
                     key={product.id} 
                     className={`rounded-2xl p-4 border flex flex-col justify-between space-y-4 shadow-sm ${
                       isDark ? 'bg-slate-950 border-slate-800' : 'bg-orange-50/30 border-orange-100'
-                    }`}
+                    } ${hasOffer ? (isDark ? 'ring-1 ring-rose-500/40' : 'ring-1 ring-rose-300') : ''}`}
                   >
                     <div className={`h-40 rounded-xl flex items-center justify-center p-4 relative overflow-hidden border ${
                       isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-orange-100'
                     }`}>
+                      {hasOffer && (
+                        <span className="absolute top-2 left-2 bg-rose-600 text-white text-[11px] font-extrabold px-2 py-1 rounded-full shadow-md">
+                          {activeOffer.discount_percentage}% OFF
+                        </span>
+                      )}
                       <img src={productImg} alt={product.name} className="max-h-full max-w-full object-contain" />
                     </div>
                     <div className="space-y-1">
                       <h4 className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-800'}`}>{product.name}</h4>
-                      <p className={`font-extrabold text-lg ${isDark ? 'text-indigo-400' : 'text-orange-600'}`}>
-                        ₹{Number(product.price).toLocaleString('en-IN')}
-                      </p>
+                      {hasOffer ? (
+                        <div className="flex items-baseline gap-2">
+                          <p className="font-extrabold text-lg text-rose-500">
+                            ₹{displayPrice.toLocaleString('en-IN')}
+                          </p>
+                          <p className={`text-sm line-through ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                            ₹{originalPrice.toLocaleString('en-IN')}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className={`font-extrabold text-lg ${isDark ? 'text-indigo-400' : 'text-orange-600'}`}>
+                          ₹{displayPrice.toLocaleString('en-IN')}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2 pt-2 border-t border-slate-800/10">
                       <button
@@ -106,7 +146,7 @@ export default function BrandProductsModal({ brandName, category, products, shop
                         View Full Specs
                       </button>
                       <a
-                        href={`https://wa.me/${shopInfo.whatsappNumber}?text=Hi,%20I%20want%20to%20enquire%20about%20${product.brand}%20${product.name}%20priced%20at%20₹${product.price}`}
+                        href={`https://wa.me/${shopInfo.whatsappNumber}?text=${encodeURIComponent(enquiryText)}`}
                         target="_blank" rel="noreferrer"
                         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
                       >

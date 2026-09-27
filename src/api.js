@@ -28,41 +28,52 @@ export const api = {
   },
 
   updateProduct: async (id, productData) => {
-  if (!id) {
-    throw new Error("updateProduct requires a valid product ID");
-  }
+    if (!id) {
+      throw new Error("updateProduct requires a valid product ID");
+    }
 
-  const isFormData = productData instanceof FormData;
-  const options = {
-    method: 'PUT',
-    body: isFormData ? productData : JSON.stringify(productData),
-  };
+    const isFormData = productData instanceof FormData;
+    const options = {
+      method: 'PUT',
+      body: isFormData ? productData : JSON.stringify(productData),
+    };
 
-  if (!isFormData) {
-    options.headers = { 'Content-Type': 'application/json' };
-  }
+    if (!isFormData) {
+      options.headers = { 'Content-Type': 'application/json' };
+    }
 
-  // Encode URI component to prevent syntax errors in the URL
-  const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}`, options);
+    // Encode URI component to prevent syntax errors in the URL
+    const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}`, options);
 
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || errData.message || `Failed to update product (HTTP ${res.status})`);
-  }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || errData.message || `Failed to update product (HTTP ${res.status})`);
+    }
 
-  // Handle HTTP 204 (No Content) responses
-  if (res.status === 204) {
-    return { id, success: true };
-  }
+    // Handle HTTP 204 (No Content) responses
+    if (res.status === 204) {
+      return { id, success: true };
+    }
 
-  return res.json();
-},
+    return res.json();
+  },
 
   deleteProduct: async (id) => {
     const res = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Failed to delete product');
+    return res.json();
+  },
+
+  // Fetch a single product along with its currently active offer (if any).
+  // The backend (/api/products/:id/with-offer) only returns an offer whose
+  // valid_until is today or later, so once an offer's end date has passed
+  // `activeOffer` naturally comes back null and callers fall back to the
+  // product's own price.
+  getProductWithOffer: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}/with-offer`);
+    if (!res.ok) throw new Error('Failed to fetch product offer');
     return res.json();
   },
 
@@ -200,17 +211,38 @@ export const api = {
     return res.json();
   },
 
-//offer
-createoffer: async (data) => {
-  const res = await fetch(`${API_BASE_URL}/offers`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error('Failed to apply offer');
-  return res.json();
-},
+  // ---- Offers ----
+  getOffers: async () => {
+    const res = await fetch(`${API_BASE_URL}/offers`);
+    if (!res.ok) throw new Error('Failed to fetch offers');
+    return res.json();
+  },
 
+  createoffer: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/offers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to apply offer');
+    return res.json();
+  },
 
+  updateOffers: async (id, data) => {
+    const res = await fetch(`${API_BASE_URL}/offers/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to update offer');
+    return res.json();
+  },
+
+  deleteOffers: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/offers/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete offer');
+    return res.json();
+  },
 };
-

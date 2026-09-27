@@ -14,6 +14,19 @@ import AboutGalleryAdmin from './components/AboutGalleryAdmin';
 
 const EMPTY_PRODUCT = { id: null, category: '', name: '', brand: '', price: '', specs: '' };
 const EMPTY_SERVICE = { id: null, category: 'mobile', name: '', description: '', price: '' };
+// Matches the `offers` table exactly: category_id / brand_id / product_id
+// are foreign-key IDs, never plain text names.
+const EMPTY_OFFERS = {
+  id: null,
+  category_id: '',
+  brand_id: '',
+  product_id: '',
+  original_price: '',
+  discount_percentage: '',
+  offer_price: '',
+  valid_until: '',
+  is_active: true,
+};
 
 export default function AdminPage({ theme = 'dark' }) {
   const [activeSubTab, setActiveSubTab] = useState('products');
@@ -21,8 +34,8 @@ export default function AdminPage({ theme = 'dark' }) {
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
   const [services, setServices] = useState([]);
-  const [categories, setCategories] = useState([]); 
-  const [brands, setBrands] = useState([]);         
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [galleryItems, setGalleryItems] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -34,22 +47,28 @@ export default function AdminPage({ theme = 'dark' }) {
   const [sForm, setSForm] = useState(EMPTY_SERVICE);
   const [isEditingService, setIsEditingService] = useState(false);
 
+  const [oForm, setOForm] = useState(EMPTY_OFFERS);
+  const [isEditingOffers, setIsEditingOffers] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [productData, serviceData, categoryData, brandData, galleryData] = await Promise.all([
+      // Fetch products, services, categories, brands, and offers from their respective tables
+      const [productData, serviceData, categoryData, brandData, offersData, galleryData] = await Promise.all([
         api.getProducts(),
         api.getServices(),
         api.getCategories(),
         api.getBrands(),
+        api.getOffers(),
         api.getAboutGallery(),
       ]);
       setProducts(Array.isArray(productData) ? productData : []);
       setServices(Array.isArray(serviceData) ? serviceData : []);
       setCategories(Array.isArray(categoryData) ? categoryData : []);
       setBrands(Array.isArray(brandData) ? brandData : []);
+      setOffers(Array.isArray(offersData) ? offersData : []);
       setGalleryItems(galleryData?.success ? galleryData.data : (Array.isArray(galleryData) ? galleryData : []));
     } catch (err) {
       console.error('Failed to load admin data', err);
@@ -58,13 +77,14 @@ export default function AdminPage({ theme = 'dark' }) {
       setCategories([]);
       setBrands([]);
       setGalleryItems([]);
+      setOffers([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { 
-    loadData(); 
+  useEffect(() => {
+    loadData();
   }, [loadData]);
 
   const showToast = (type, message) => {
@@ -77,7 +97,7 @@ export default function AdminPage({ theme = 'dark' }) {
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
-    
+
     setSaving(true);
     try {
       const payload = customFormData || pForm;
@@ -99,26 +119,26 @@ export default function AdminPage({ theme = 'dark' }) {
     }
   };
 
+  // ---- Offers Submission Handler ----
   const handleOfferSubmit = async (e, customFormData = null) => {
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
     setSaving(true);
     try {
-      const payload = customFormData || pForm;
-
-      if (isEditingProduct) {
-        const updated = await api.updateProduct(pForm.id, payload);
-        setOffers(products.map(p => (p.id === updated.id ? updated : p)));
-        showToast('success', 'Offers Apply');
+      const payload = customFormData || oForm;
+      if (isEditingOffers) {
+        const updated = await api.updateOffers(oForm.id, payload);
+        setOffers(offers.map(p => (p.id === updated.id ? updated : p)));
+        showToast('success', 'Offers Updated');
       } else {
-        const created = await api.create(payload);
-        setOffers([created, ...products]);
-        showToast('success', 'Offers Apply');
+        const created = await api.createoffer(payload);
+        setOffers([created, ...offers]);
+        showToast('success', 'Offer Added');
       }
-      resetProductForm();
+      resetOffersForm();
     } catch (err) {
-      showToast('error', err.message || 'Could not save product');
+      showToast('error', err.message || 'Could not save offers');
     } finally {
       setSaving(false);
     }
@@ -127,6 +147,24 @@ export default function AdminPage({ theme = 'dark' }) {
   const editProduct = (product) => {
     setPForm(product);
     setIsEditingProduct(true);
+  };
+
+  // Populates the OFFERS form (oForm) directly from the offer's own IDs —
+  // category_id / brand_id / product_id — since that's exactly what the
+  // dropdowns in OffersForm select by. No name lookups/round-tripping needed.
+  const editOffers = (offer) => {
+    setOForm({
+      id: offer.id,
+      category_id: offer.category_id ?? '',
+      brand_id: offer.brand_id ?? '',
+      product_id: offer.product_id ?? '',
+      original_price: offer.original_price ?? '',
+      discount_percentage: offer.discount_percentage ?? '',
+      offer_price: offer.offer_price ?? '',
+      valid_until: offer.valid_until ? offer.valid_until.split('T')[0] : '',
+      is_active: offer.is_active !== false,
+    });
+    setIsEditingOffers(true);
   };
 
   const deleteProduct = async (id) => {
@@ -140,9 +178,26 @@ export default function AdminPage({ theme = 'dark' }) {
     }
   };
 
+  const deleteOffers = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this offer?')) return;
+    try {
+      await api.deleteOffers(id);
+      setOffers(offers.filter(p => p.id !== id));
+      showToast('success', 'Offers deleted');
+    } catch (err) {
+      showToast('error', err.message || 'Could not delete Offers');
+    }
+  };
+
   const resetProductForm = () => {
     setPForm(EMPTY_PRODUCT);
     setIsEditingProduct(false);
+  };
+
+  // Resets the OFFERS form to match the exact field shape OffersForm expects.
+  const resetOffersForm = () => {
+    setOForm(EMPTY_OFFERS);
+    setIsEditingOffers(false);
   };
 
   // ---- Services Submission Handler ----
@@ -194,10 +249,10 @@ export default function AdminPage({ theme = 'dark' }) {
     <div className={`max-w-7xl mx-auto px-4 py-10 space-y-8 transition-colors duration-300 ${
       isDark ? 'text-slate-100' : 'text-slate-900'
     }`}>
-      <AdminHeader 
-        activeSubTab={activeSubTab} 
-        setActiveSubTab={setActiveSubTab} 
-        theme={theme} 
+      <AdminHeader
+        activeSubTab={activeSubTab}
+        setActiveSubTab={setActiveSubTab}
+        theme={theme}
       />
 
       {activeSubTab === 'products' ? (
@@ -240,20 +295,30 @@ export default function AdminPage({ theme = 'dark' }) {
             theme={theme}
           />
         </div>
-      ) : activeSubTab==='offers' ? (
+      ) : activeSubTab === 'offers' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-           <OffersForm 
-            pForm={pForm}
-            setPForm={setPForm}
-            isEditingProduct={isEditingProduct}
+          <OffersForm
+            oForm={oForm}
+            setOForm={setOForm}
+            isEditingOffer={isEditingOffers}
             handleOfferSubmit={handleOfferSubmit}
-            resetProductForm={resetProductForm}
+            resetOffersForm={resetOffersForm}
             saving={saving}
-            categories={categories} // <--- Passed down here
-            brands={brands}  
-            product={products}         
-            theme={theme}></OffersForm>
-           <OffersTable></OffersTable>
+            categories={categories}
+            brands={brands}
+            products={products}
+            theme={theme}
+          />
+          <OffersTable
+            offers={offers}
+            loading={loading}
+            editOffers={editOffers}
+            deleteOffers={deleteOffers}
+            categories={categories}
+            brands={brands}
+            products={products}
+            theme={theme}
+          />
         </div>
       ) : activeSubTab === 'about' ? (
         <AboutGalleryAdmin
@@ -264,7 +329,7 @@ export default function AdminPage({ theme = 'dark' }) {
         />
       ) : (
         <CategoryBrandManager theme={theme} showToast={showToast} />
-      ) }
+      )}
 
       <AnimatePresence>
         <Toast toast={toast} />

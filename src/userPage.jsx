@@ -15,6 +15,7 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
   const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]); // <--- Dynamic categories state
   const [brands, setBrands] = useState([]);         // <--- Dynamic brands state
+  const [offers, setOffers] = useState([]);         // <--- Active/inactive offers, keyed by product_id
   const [galleryItems, setGalleryItems] = useState([]); // <--- About Us gallery images
   
   const [loading, setLoading] = useState(true);
@@ -28,18 +29,20 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
     (async () => {
       try {
         setLoading(true);
-        // Fetch products, services, categories, and brands in parallel
-        const [productData, serviceData, categoryData, brandData, galleryData] = await Promise.all([
+        // Fetch products, services, categories, brands, and offers in parallel
+        const [productData, serviceData, categoryData, brandData, offersData, galleryData] = await Promise.all([
           api.getProducts(),
           api.getServices(),
           api.getCategories(),
           api.getBrands(),
+          api.getOffers(),
           api.getAboutGallery()
         ]);
         setProducts(Array.isArray(productData) ? productData : []);
         setServices(Array.isArray(serviceData) ? serviceData : []);
         setCategories(Array.isArray(categoryData) ? categoryData : []);
         setBrands(Array.isArray(brandData) ? brandData : []);
+        setOffers(Array.isArray(offersData) ? offersData : []);
         setGalleryItems(galleryData?.success ? galleryData.data : (Array.isArray(galleryData) ? galleryData : []));
       } catch (err) {
         setLoadError('Could not load the catalog. Is the API server running?');
@@ -100,6 +103,7 @@ export default function UserPage({ shopInfo, theme = 'dark' }) {
             brandName={selectedBrandModal}
             category={selectedCategory}
             products={products}
+            offers={offers}
             shopInfo={shopInfo}
             onClose={() => setSelectedBrandModal(null)}
             onSelectProduct={setSelectedProduct}
