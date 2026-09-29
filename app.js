@@ -27,7 +27,15 @@ api.use('/categories', categoryRoutes);
 api.use('/about-gallery', aboutGalleryRoutes);
 api.use('/brands', brandRoutes);
 api.use('/offers', offersRoutes);
-api.get('/health', (req, res) => res.json({ status: 'ok' }));
+api.get('/health', (req, res) =>
+  res.json({
+    status: 'ok',
+    env: {
+      SUPABASE_URL: !!process.env.SUPABASE_URL,
+      SUPABASE_SECRET_KEY: !!process.env.SUPABASE_SECRET_KEY,
+    },
+  })
+);
 
 // Local dev / direct calls:        /api/...
 // Netlify (after the redirect):    /.netlify/functions/api/...
