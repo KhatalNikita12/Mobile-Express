@@ -85,7 +85,7 @@ export default function AboutUs({ galleryItems = [], theme = 'dark' }) {
                   }
                 }
 
-                const imageUrl = imgSource?.startsWith('http') ? imgSource : `http://localhost:5000${imgSource}`;
+                const imageUrl = imgSource;
 
                 return (
                   <div 
