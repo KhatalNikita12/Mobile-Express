@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Phone, MapPin } from 'lucide-react';
+
 
 export default function ContactSection({ shopInfo,theme }) {
   // Use passed shopInfo props if available, or fall back to Rahul Varma's details

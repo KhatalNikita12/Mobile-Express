@@ -24,8 +24,8 @@
     "tailwindcss": "^3.4.19",
     "web-vitals": "^2.1.4"
   },
-  "scripts": {
-    "start": "node server.js",
+"scripts": {
+    "start": "npm run dev",
     "react": "react-scripts start",
     "dev": "concurrently \"node server.js\" \"react-scripts start\"",
     "build": "react-scripts build",
