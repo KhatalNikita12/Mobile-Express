@@ -9,6 +9,7 @@ const categoryRoutes = require('./categories');
 const brandRoutes = require('./brands');
 const offersRoutes = require('./offers');
 const aboutGalleryRoutes = require('./aboutGallery');
+const authRoutes = require('./auth');
 
 const app = express();
 
@@ -27,6 +28,7 @@ api.use('/categories', categoryRoutes);
 api.use('/about-gallery', aboutGalleryRoutes);
 api.use('/brands', brandRoutes);
 api.use('/offers', offersRoutes);
+api.use('/auth', authRoutes);
 api.get('/health', (req, res) =>
   res.json({
     status: 'ok',
