@@ -7,8 +7,8 @@ const router = express.Router();
 
 const TOKEN_HOURS = 8;
 
-const adminUser = () => process.env.ADMIN_USERNAME || 'admin';
-const adminPass = () => process.env.ADMIN_PASSWORD || '';
+const adminUser = () => process.env.ADMIN_USERNAME;
+const adminPass = () => process.env.ADMIN_PASSWORD ;
 
 const signingKey = () =>
   crypto.createHash('sha256').update(`mx-admin:${adminUser()}:${adminPass()}`).digest();
