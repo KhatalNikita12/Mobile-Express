@@ -6,11 +6,13 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Don't let Netlify's secret scanner fail the build on harmless public values
+  SECRETS_SCAN_OMIT_KEYS = "REACT_APP_API_URL"
 
 [functions]
   node_bundler = "esbuild"
 
-# 1) API calls -> Express backend
+# 1) API calls -> Express backend (serverless function)
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"

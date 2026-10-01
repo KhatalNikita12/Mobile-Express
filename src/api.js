@@ -1,6 +1,6 @@
 import { readToken, saveToken } from './AuthToken';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // fetch() that automatically sends the admin token. If the server says the
 // token is invalid/expired (401), it is cleared and the app returns to the login screen.

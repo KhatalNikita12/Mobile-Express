@@ -27,7 +27,7 @@ const makeToken = () => {
 };
 
 const verifyToken = (token) => {
-  if (!token || !adminPass()) return false;
+  if (!token || !adminUser() || !adminPass()) return false;
   const [exp, sig] = String(token).split('.');
   if (!exp || !sig) return false;
   if (!safeEqual(sig, sign(exp))) return false;
@@ -37,8 +37,8 @@ const verifyToken = (token) => {
 const bearer = (req) => (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
 
 router.post('/login', (req, res) => {
-  if (!adminPass()) {
-    return res.status(500).json({ error: 'ADMIN_PASSWORD is not set on the server.' });
+  if (!adminUser() || !adminPass()) {
+    return res.status(500).json({ error: 'ADMIN_USERNAME / ADMIN_PASSWORD are not set on the server.' });
   }
   const { username = '', password = '' } = req.body || {};
   const userOk = safeEqual(username, adminUser());
