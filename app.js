@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 });
 
 const api = express.Router();
+api.use(authRoutes.protectWrites);   // writes (POST/PUT/DELETE) need admin login
 api.use('/products', productRoutes);
 api.use('/services', serviceRoutes);
 api.use('/categories', categoryRoutes);
@@ -43,5 +44,7 @@ api.get('/health', (req, res) =>
 // Netlify (after the redirect):    /.netlify/functions/api/...
 app.use('/api', api);
 app.use('/.netlify/functions/api', api);
+// Fallback: also answer without the /api prefix (e.g. REACT_APP_API_URL=http://localhost:5000)
+app.use('/', api);
 
 module.exports = app;

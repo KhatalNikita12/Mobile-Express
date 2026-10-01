@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon } from 'lucide-react';
 
-export default function Header({ activeTab = 'user', setActiveTab = () => {} }) {
-  // State to track current theme: 'light' or 'dark'
-  const [theme, setTheme] = useState('dark');
+export default function Header({ theme = 'dark', toggleTheme = () => {} }) {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  // Hidden entry to admin: double-click the theme button on user side
+  const handleThemeDoubleClick = () => {
+    if (!isAdmin) {
+      navigate('/admin');
+    }
+  };
+
+  const handleSwitchToggle = () => {
+    if (isAdmin) {
+      navigate('/user');
+    } else {
+      navigate('/admin');
+    }
   };
 
   // Direct image URL provided for your logo
   const logoUrl = "./logo.png";
+
   return (
     <header
       className={`sticky top-0 z-50 shadow-md transition-colors duration-300 ${
@@ -21,21 +36,23 @@ export default function Header({ activeTab = 'user', setActiveTab = () => {} }) 
     >
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo Section with Custom Image */}
-        <div className="flex items-center space-x-3">
+        <div 
+          className="flex items-center space-x-3 cursor-pointer" 
+          onClick={() => navigate('/user')}
+        >
           <img 
             src={logoUrl} 
             alt="MOBILE XPRESS Logo" 
             className="h-8 w-8 rounded-full object-cover border-2 border-orange-500 shadow-sm"
             onError={(e) => {
-              // Fallback if the image fails to load or blocks due to CORS/hotlinking
               e.target.style.display = 'none';
             }}
           />
-          <span className="font-bold text-lg tracking-wider">MOBILE  </span>
+          <span className="font-bold text-lg tracking-wider">MOBILE XPRESS</span>
         </div>
 
-        {/* Navigation Links (User View) */}
-        {activeTab === 'user' && (
+        {/* Navigation Links (User View Only) */}
+        {!isAdmin && (
           <nav className="hidden md:flex space-x-6 text-sm font-medium">
             <a
               href="#home"
@@ -61,7 +78,7 @@ export default function Header({ activeTab = 'user', setActiveTab = () => {} }) 
             >
               Services
             </a>
-                  <a
+            <a
               href="#about"
               className={`transition ${
                 theme === 'dark' ? 'hover:text-indigo-400' : 'hover:text-orange-500'
@@ -82,29 +99,30 @@ export default function Header({ activeTab = 'user', setActiveTab = () => {} }) 
 
         {/* Action Buttons Section */}
         <div className="flex items-center space-x-3">
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle Button: Click = switch theme | Double-click = open admin */}
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-full transition shadow-sm border ${
+            onDoubleClick={handleThemeDoubleClick}
+            className={`p-2 rounded-full transition shadow-sm border select-none cursor-pointer ${
               theme === 'dark'
                 ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700'
                 : 'bg-orange-50 border-orange-200 text-orange-600 hover:bg-orange-100'
             }`}
-            title="Toggle Theme"
+            title="Click to toggle theme | Double-click for Admin panel"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
 
           {/* Panel Switcher Button */}
           <button
-            onClick={() => setActiveTab(activeTab === 'user' ? 'admin' : 'user')}
+            onClick={handleSwitchToggle}
             className={`px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition shadow ${
               theme === 'dark'
                 ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
                 : 'bg-orange-500 hover:bg-orange-600 text-white'
             }`}
           >
-            {activeTab === 'user' ? 'Switch to Admin Panel' : 'Switch to User View'}
+            {isAdmin ? 'Switch to User View' : 'Switch to Admin Panel'}
           </button>
         </div>
       </div>

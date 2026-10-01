@@ -1,14 +1,20 @@
-// auth.js — simple admin login (password lives only on the server, in env vars)
+// auth.js — admin login. Only needs ADMIN_USERNAME + ADMIN_PASSWORD (no ADMIN_TOKEN_SECRET).
+// The login token is signed with a key derived from the password, so changing the
+// password automatically logs everyone out.
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 
 const TOKEN_HOURS = 8;
 
-const secret = () => process.env.ADMIN_TOKEN_SECRET || process.env.ADMIN_PASSWORD || '';
-const sign = (payload) => crypto.createHmac('sha256', secret()).update(payload).digest('hex');
+const adminUser = () => process.env.ADMIN_USERNAME || 'admin';
+const adminPass = () => process.env.ADMIN_PASSWORD || '';
 
-// constant-time string compare (hashes first so length differences don't leak)
+const signingKey = () =>
+  crypto.createHash('sha256').update(`mx-admin:${adminUser()}:${adminPass()}`).digest();
+const sign = (payload) => crypto.createHmac('sha256', signingKey()).update(payload).digest('hex');
+
+// constant-time compare (hashes first so length differences don't leak)
 const safeEqual = (a, b) => {
   const ha = crypto.createHash('sha256').update(String(a)).digest();
   const hb = crypto.createHash('sha256').update(String(b)).digest();
@@ -21,7 +27,7 @@ const makeToken = () => {
 };
 
 const verifyToken = (token) => {
-  if (!token || !secret()) return false;
+  if (!token || !adminPass()) return false;
   const [exp, sig] = String(token).split('.');
   if (!exp || !sig) return false;
   if (!safeEqual(sig, sign(exp))) return false;
@@ -31,17 +37,15 @@ const verifyToken = (token) => {
 const bearer = (req) => (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
 
 router.post('/login', (req, res) => {
-  const expectedUser = process.env.ADMIN_USERNAME || 'admin';
-  const expectedPass = process.env.ADMIN_PASSWORD;
-
-  if (!expectedPass) {
+  if (!adminPass()) {
     return res.status(500).json({ error: 'ADMIN_PASSWORD is not set on the server.' });
   }
-
   const { username = '', password = '' } = req.body || {};
-  const ok = safeEqual(username, expectedUser) & safeEqual(password, expectedPass);
-  if (!ok) return res.status(401).json({ error: 'Invalid username or password.' });
-
+  const userOk = safeEqual(username, adminUser());
+  const passOk = safeEqual(password, adminPass());
+  if (!(userOk && passOk)) {
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  }
   res.json({ token: makeToken() });
 });
 
@@ -50,5 +54,14 @@ router.get('/verify', (req, res) => {
   res.status(401).json({ valid: false });
 });
 
+// Middleware: anyone can READ (GET), but add/edit/delete needs a valid admin token.
+const protectWrites = (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (req.path.startsWith('/auth')) return next(); // login itself must stay open
+  if (verifyToken(bearer(req))) return next();
+  res.status(401).json({ error: 'Admin login required.' });
+};
+
 module.exports = router;
-module.exports.verifyToken = verifyToken; // reuse later to protect write routes
+module.exports.verifyToken = verifyToken;
+module.exports.protectWrites = protectWrites;
