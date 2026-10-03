@@ -91,21 +91,7 @@ export default function ProductForm({
           </select>
         </div>
 
-        {/* Product Name */}
-        <div>
-          <label className={`block font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Product Name</label>
-          <input 
-            type="text" 
-            required 
-            value={pForm.name || ''} 
-            onChange={(e) => setPForm({ ...pForm, name: e.target.value })} 
-            placeholder="e.g. Galaxy S24" 
-            className={`w-full border rounded-xl p-2.5 outline-none transition-colors ${
-              isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-orange-50/50 border-orange-200 text-slate-900'
-            }`} 
-          />
-        </div>
-
+       
         {/* Dynamic Brand Dropdown */}
         <div>
           <label className={`block font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Brand</label>
@@ -124,6 +110,21 @@ export default function ProductForm({
               </option>
             ))}
           </select>
+        </div>
+
+ {/* Product Name */}
+        <div>
+          <label className={`block font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Product Name</label>
+          <input 
+            type="text" 
+            required 
+            value={pForm.name || ''} 
+            onChange={(e) => setPForm({ ...pForm, name: e.target.value })} 
+            placeholder="e.g. Galaxy S24" 
+            className={`w-full border rounded-xl p-2.5 outline-none transition-colors ${
+              isDark ? 'bg-slate-950 border-slate-800 text-white' : 'bg-orange-50/50 border-orange-200 text-slate-900'
+            }`} 
+          />
         </div>
 
         {/* Price */}

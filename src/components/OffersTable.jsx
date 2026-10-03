@@ -67,7 +67,7 @@ export default function OffersTable({
 
   return (
     <div
-      className={`rounded-2xl border shadow-sm overflow-hidden transition-colors duration-300 w-full ${
+      className={`rounded-2xl border shadow-sm overflow-hidden transition-colors duration-300 w-[200%] ${
         isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-orange-200 text-slate-900'
       }`}
     >

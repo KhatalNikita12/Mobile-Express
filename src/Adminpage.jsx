@@ -14,8 +14,7 @@ import AboutGalleryAdmin from './components/AboutGalleryAdmin';
 
 const EMPTY_PRODUCT = { id: null, category: '', name: '', brand: '', price: '', specs: '' };
 const EMPTY_SERVICE = { id: null, category: 'mobile', name: '', description: '', price: '' };
-// Matches the `offers` table exactly: category_id / brand_id / product_id
-// are foreign-key IDs, never plain text names.
+
 const EMPTY_OFFERS = {
   id: null,
   category_id: '',
